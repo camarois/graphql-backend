@@ -1,0 +1,45 @@
+image: elixir:1.9.0-slim
+
+services:
+  - postgres:alpine
+
+variables:
+  POSTGRES_DB: app_development_test
+  POSTGRES_HOST: localhost
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: "postgres"
+  MIX_ENV: "test"
+
+stages:
+  - code-analysis
+  - unitTests
+
+credo:
+  stage: code-analysis
+  script:
+    - scripts/environment_setup.sh
+    - mix lint
+
+dialyzer:
+  stage: code-analysis
+  script:
+    - scripts/environment_setup.sh
+    - mix dialyzer
+
+documentation:
+  stage: code-analysis
+  script:
+    - scripts/environment_setup.sh
+    - mix hex.outdated
+    - mix inch
+
+format:
+  stage: code-analysis
+  script:
+    - mix format --check-formatted mix.exs "lib/**/*.{ex,exs}" "test/**/*.{ex,exs}"
+
+unitTests:
+  stage: unitTests
+  script:
+    - scripts/environment_setup.sh
+    - MIX_ENV=test mix coveralls.detail
